@@ -1,0 +1,42 @@
+export const patients = [
+  {
+    id: 'PAT001',
+    name: 'Patient User',
+    email: 'patient@example.com',
+    phone: '+91 98765 43210',
+    age: 30,
+    gender: 'Male',
+  },
+  {
+    id: 'PAT002',
+    name: 'Arun Kumar',
+    email: 'arun@example.com',
+    phone: '+91 98765 43211',
+    age: 35,
+    gender: 'Male',
+  },
+  {
+    id: 'PAT003',
+    name: 'Rahul Singh',
+    email: 'rahul@example.com',
+    phone: '+91 98765 43212',
+    age: 28,
+    gender: 'Male',
+  },
+  {
+    id: 'PAT004',
+    name: 'Meena Devi',
+    email: 'meena@example.com',
+    phone: '+91 98765 43213',
+    age: 42,
+    gender: 'Female',
+  },
+  {
+    id: 'PAT005',
+    name: 'Sanjay Gupta',
+    email: 'sanjay@example.com',
+    phone: '+91 98765 43214',
+    age: 55,
+    gender: 'Male',
+  },
+];
