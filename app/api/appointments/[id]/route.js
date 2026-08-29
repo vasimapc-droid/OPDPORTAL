@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server';
+ import { NextResponse } from 'next/server';
 import { updateAppointment } from '../../../../services/dataStore';
 
 export async function PATCH(request, { params }) {
   try {
     const { id } = params;
     const body = await request.json();
-    const { status } = body;
+    const { status, consultationNotes } = body;
 
     if (!status || !['Completed', 'Cancelled'].includes(status)) {
       return NextResponse.json(
@@ -17,6 +17,9 @@ export async function PATCH(request, { params }) {
     const updates = { status };
     if (status === 'Cancelled') {
       updates.queuePosition = null;
+    }
+    if (consultationNotes) {
+      updates.consultationNotes = consultationNotes;
     }
 
     const updated = updateAppointment(id, updates);
