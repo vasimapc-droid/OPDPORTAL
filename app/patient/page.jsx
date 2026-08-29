@@ -6,7 +6,6 @@ import { appointmentService } from '../../services/appointmentService';
 import Loading from '../../components/Loading';
 import EmptyState from '../../components/EmptyState';
 import StatusBadge from '../../components/StatusBadge';
-import StatsCard from '../../components/StatsCard';
 
 export default function PatientDashboard() {
   const router = useRouter();
@@ -23,7 +22,7 @@ export default function PatientDashboard() {
         setAppointments(response.data);
       }
     } catch (err) {
-      setError('Unable to load appointments. Please try again.');
+      setError('Unable to load appointments.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -93,9 +92,18 @@ export default function PatientDashboard() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <StatsCard title="Upcoming" value={upcomingAppointments.length} icon="??" color="primary" />
-        <StatsCard title="Completed" value={completedAppointments.length} icon="?" color="success" />
-        <StatsCard title="Cancelled" value={cancelledAppointments.length} icon="?" color="danger" />
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <p className="text-sm text-gray-600 mb-1">Upcoming</p>
+          <p className="text-3xl font-bold text-gray-900">{upcomingAppointments.length}</p>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <p className="text-sm text-gray-600 mb-1">Completed</p>
+          <p className="text-3xl font-bold text-gray-900">{completedAppointments.length}</p>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <p className="text-sm text-gray-600 mb-1">Cancelled</p>
+          <p className="text-3xl font-bold text-gray-900">{cancelledAppointments.length}</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -123,8 +131,7 @@ export default function PatientDashboard() {
         {appointments.length === 0 ? (
           <EmptyState
             title="No Appointments"
-            message="You don't have any appointments yet. Book one now!"
-            icon="??"
+            message="You don't have any appointments yet."
             actionLabel="Book Appointment"
             onAction={() => router.push('/patient/doctors')}
           />
@@ -148,9 +155,6 @@ export default function PatientDashboard() {
                   )}
                   {appt.symptoms && (
                     <p className="text-sm text-gray-600">Symptoms: {appt.symptoms}</p>
-                  )}
-                  {appt.consultationNotes && (
-                    <p className="text-sm text-green-600">Doctor's Notes: {appt.consultationNotes}</p>
                   )}
                 </div>
               </div>

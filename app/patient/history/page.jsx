@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { appointmentService } from '../../../services/appointmentService';
 import Loading from '../../../components/Loading';
 import EmptyState from '../../../components/EmptyState';
@@ -9,10 +9,26 @@ import StatusBadge from '../../../components/StatusBadge';
 
 export default function PatientHistory() {
   const router = useRouter();
+  const pathname = usePathname();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
   const [error, setError] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const fetchAppointments = useCallback(async (patientId) => {
+    setLoading(true);
+    try {
+      const response = await appointmentService.getAppointments({ patientId });
+      if (response.success) {
+        setAppointments(response.data);
+      }
+    } catch (err) {
+      setError('Unable to load history.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('opd_user');
@@ -26,19 +42,10 @@ export default function PatientHistory() {
       return;
     }
     fetchAppointments(user.id);
-  }, []);
+  }, [fetchAppointments, refreshKey, pathname]);
 
-  const fetchAppointments = async (patientId) => {
-    try {
-      const response = await appointmentService.getAppointments({ patientId });
-      if (response.success) {
-        setAppointments(response.data);
-      }
-    } catch (err) {
-      setError('Unable to load history.');
-    } finally {
-      setLoading(false);
-    }
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
   };
 
   const pastAppointments = appointments.filter(
@@ -55,7 +62,12 @@ export default function PatientHistory() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Booking History</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-900">Booking History</h1>
+        <button onClick={handleRefresh} className="btn-secondary">
+          Refresh
+        </button>
+      </div>
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
@@ -82,7 +94,7 @@ export default function PatientHistory() {
       {filteredAppointments.length === 0 ? (
         <EmptyState
           title="No History"
-          message="No past appointments found."
+          message="No past appointments found. Complete or cancel appointments to see them here."
           icon="??"
         />
       ) : (

@@ -3,55 +3,56 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { appointmentService } from '../../../services/appointmentService';
-import Loading from '../../../components/Loading';
-import EmptyState from '../../../components/EmptyState';
-import StatusBadge from '../../../components/StatusBadge';
 
 export default function PatientAppointments() {
   const router = useRouter();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('All');
   const [error, setError] = useState('');
 
-  useEffect(() => {
+  const loadAppointments = async () => {
     const storedUser = localStorage.getItem('opd_user');
     if (!storedUser) {
       router.push('/login');
       return;
     }
     const user = JSON.parse(storedUser);
-    if (user.role !== 'patient') {
-      router.push('/doctor');
-      return;
-    }
-    fetchAppointments(user.id);
-  }, []);
-
-  const fetchAppointments = async (patientId) => {
+    setLoading(true);
     try {
-      const response = await appointmentService.getAppointments({ patientId });
+      const response = await appointmentService.getAppointments({ patientId: user.id });
+      console.log('Full response:', response);
       if (response.success) {
+        console.log('Setting appointments:', response.data.length);
         setAppointments(response.data);
       }
     } catch (err) {
+      console.error('Error loading:', err);
       setError('Unable to load appointments.');
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredAppointments = filter === 'All' 
-    ? appointments 
-    : appointments.filter((appt) => appt.status === filter);
+  useEffect(() => {
+    loadAppointments();
+  }, []);
 
   if (loading) {
-    return <Loading message="Loading appointments..." />;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">My Appointments</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-900">My Appointments</h1>
+        <button onClick={loadAppointments} className="btn-secondary">
+          Refresh
+        </button>
+      </div>
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
@@ -59,56 +60,21 @@ export default function PatientAppointments() {
         </div>
       )}
 
-      <div className="flex gap-2 flex-wrap">
-        {['All', 'Upcoming', 'Completed', 'Cancelled'].map((status) => (
-          <button
-            key={status}
-            onClick={() => setFilter(status)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              filter === status
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            {status}
-          </button>
-        ))}
-      </div>
+      <p className="text-gray-600">Total: {appointments.length} appointments</p>
 
-      {filteredAppointments.length === 0 ? (
-        <EmptyState
-          title="No Appointments Found"
-          message="You don't have any appointments in this category."
-          icon="??"
-          actionLabel="Book Appointment"
-          onAction={() => router.push('/patient/doctors')}
-        />
+      {appointments.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+          <p className="text-gray-600">No appointments found.</p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredAppointments.map((appt) => (
+        <div className="space-y-4">
+          {appointments.map((appt) => (
             <div key={appt.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-sm text-gray-600">Appointment ID</p>
-                  <p className="font-semibold text-gray-900">{appt.id}</p>
-                </div>
-                <StatusBadge status={appt.status} />
-              </div>
-              
-              <div className="mt-4 space-y-2">
-                <p className="text-gray-900 font-medium">{appt.doctorName}</p>
-                <p className="text-sm text-gray-600">{appt.department}</p>
-                <p className="text-sm text-gray-600">{appt.date} | {appt.time}</p>
-                {appt.queuePosition && (
-                  <p className="text-sm text-gray-600">Queue Position: #{appt.queuePosition}</p>
-                )}
-                {appt.symptoms && (
-                  <p className="text-sm text-gray-600">Symptoms: {appt.symptoms}</p>
-                )}
-                {appt.consultationNotes && (
-                  <p className="text-sm text-green-600">Doctor's Notes: {appt.consultationNotes}</p>
-                )}
-              </div>
+              <p className="font-semibold text-gray-900">{appt.id}</p>
+              <p className="text-gray-600">{appt.doctorName}</p>
+              <p className="text-gray-600">{appt.department}</p>
+              <p className="text-gray-600">{appt.date} | {appt.time}</p>
+              <p className="text-gray-600">Status: {appt.status}</p>
             </div>
           ))}
         </div>
