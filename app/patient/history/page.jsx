@@ -2,13 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '../../../services/api';
+import { appointmentService } from '../../../services/appointmentService';
+import Loading from '../../../components/Loading';
+import EmptyState from '../../../components/EmptyState';
+import StatusBadge from '../../../components/StatusBadge';
 
 export default function PatientHistory() {
   const router = useRouter();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const storedUser = localStorage.getItem('opd_user');
@@ -26,42 +30,38 @@ export default function PatientHistory() {
 
   const fetchAppointments = async (patientId) => {
     try {
-      const response = await api.get('/appointments', {
-        params: { patientId },
-      });
-      if (response.data.success) {
-        setAppointments(response.data.data);
+      const response = await appointmentService.getAppointments({ patientId });
+      if (response.success) {
+        setAppointments(response.data);
       }
     } catch (err) {
-      console.error('Error:', err);
+      setError('Unable to load history.');
     } finally {
       setLoading(false);
     }
   };
 
-  const completedAppointments = appointments.filter(
-    (appt) => appt.status === 'Completed'
+  const pastAppointments = appointments.filter(
+    (appt) => appt.status === 'Completed' || appt.status === 'Cancelled'
   );
-  const cancelledAppointments = appointments.filter(
-    (appt) => appt.status === 'Cancelled'
-  );
-  const pastAppointments = [...completedAppointments, ...cancelledAppointments];
 
   const filteredAppointments = filter === 'All'
     ? pastAppointments
     : pastAppointments.filter((appt) => appt.status === filter);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <Loading message="Loading history..." />;
   }
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">Booking History</h1>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <p className="text-red-700">{error}</p>
+        </div>
+      )}
 
       <div className="flex gap-2 flex-wrap">
         {['All', 'Completed', 'Cancelled'].map((status) => (
@@ -80,9 +80,11 @@ export default function PatientHistory() {
       </div>
 
       {filteredAppointments.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-          <p className="text-gray-600">No past appointments found.</p>
-        </div>
+        <EmptyState
+          title="No History"
+          message="No past appointments found."
+          icon="??"
+        />
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
@@ -106,12 +108,7 @@ export default function PatientHistory() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{appt.date}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{appt.time}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        appt.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {appt.status}
-                      </span>
+                      <StatusBadge status={appt.status} />
                     </td>
                   </tr>
                 ))}

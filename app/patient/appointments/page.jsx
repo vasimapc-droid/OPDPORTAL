@@ -2,13 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '../../../services/api';
+import { appointmentService } from '../../../services/appointmentService';
+import Loading from '../../../components/Loading';
+import EmptyState from '../../../components/EmptyState';
+import StatusBadge from '../../../components/StatusBadge';
 
 export default function PatientAppointments() {
   const router = useRouter();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const storedUser = localStorage.getItem('opd_user');
@@ -26,14 +30,12 @@ export default function PatientAppointments() {
 
   const fetchAppointments = async (patientId) => {
     try {
-      const response = await api.get('/appointments', {
-        params: { patientId },
-      });
-      if (response.data.success) {
-        setAppointments(response.data.data);
+      const response = await appointmentService.getAppointments({ patientId });
+      if (response.success) {
+        setAppointments(response.data);
       }
     } catch (err) {
-      console.error('Error:', err);
+      setError('Unable to load appointments.');
     } finally {
       setLoading(false);
     }
@@ -44,16 +46,18 @@ export default function PatientAppointments() {
     : appointments.filter((appt) => appt.status === filter);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <Loading message="Loading appointments..." />;
   }
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">My Appointments</h1>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <p className="text-red-700">{error}</p>
+        </div>
+      )}
 
       <div className="flex gap-2 flex-wrap">
         {['All', 'Upcoming', 'Completed', 'Cancelled'].map((status) => (
@@ -72,15 +76,13 @@ export default function PatientAppointments() {
       </div>
 
       {filteredAppointments.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-          <p className="text-gray-600">No appointments found.</p>
-          <button
-            onClick={() => router.push('/patient/doctors')}
-            className="btn-primary mt-4"
-          >
-            Book Appointment
-          </button>
-        </div>
+        <EmptyState
+          title="No Appointments Found"
+          message="You don't have any appointments in this category."
+          icon="??"
+          actionLabel="Book Appointment"
+          onAction={() => router.push('/patient/doctors')}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredAppointments.map((appt) => (
@@ -90,13 +92,7 @@ export default function PatientAppointments() {
                   <p className="text-sm text-gray-600">Appointment ID</p>
                   <p className="font-semibold text-gray-900">{appt.id}</p>
                 </div>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  appt.status === 'Upcoming' ? 'bg-blue-100 text-blue-800' :
-                  appt.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                  'bg-red-100 text-red-800'
-                }`}>
-                  {appt.status}
-                </span>
+                <StatusBadge status={appt.status} />
               </div>
               
               <div className="mt-4 space-y-2">
@@ -108,6 +104,9 @@ export default function PatientAppointments() {
                 )}
                 {appt.symptoms && (
                   <p className="text-sm text-gray-600">Symptoms: {appt.symptoms}</p>
+                )}
+                {appt.consultationNotes && (
+                  <p className="text-sm text-green-600">Doctor's Notes: {appt.consultationNotes}</p>
                 )}
               </div>
             </div>
