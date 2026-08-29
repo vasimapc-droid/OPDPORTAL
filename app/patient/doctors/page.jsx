@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { doctorService } from '../../../services/doctorService';
 import { appointmentService } from '../../../services/appointmentService';
 import Loading from '../../../components/Loading';
@@ -45,7 +46,7 @@ export default function DoctorsPage() {
         setDepartments(['All Departments', ...depts]);
       }
     } catch (err) {
-      setError('Unable to load doctors. Please try again.');
+      setError('Unable to load doctors.');
     } finally {
       setLoading(false);
     }
@@ -167,36 +168,43 @@ export default function DoctorsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Find Doctors</h1>
+      <motion.h1
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="text-2xl font-bold text-gray-900"
+      >
+        Find Doctors
+      </motion.h1>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-          <p className="text-red-700">{error}</p>
-        </div>
-      )}
+      <AnimatePresence>
+        {bookingSuccess && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="bg-green-50 border border-green-200 rounded-xl p-6"
+          >
+            <h3 className="text-lg font-semibold text-green-800 mb-2">Appointment Confirmed!</h3>
+            <p className="text-green-700">Appointment ID: {bookingSuccess.id}</p>
+            <p className="text-green-700">Queue Position: #{bookingSuccess.queuePosition}</p>
+            <div className="flex gap-3 mt-4">
+              <button onClick={() => router.push('/patient/appointments')} className="btn-primary">
+                View My Appointments
+              </button>
+              <button onClick={() => setBookingSuccess(null)} className="btn-secondary">
+                Close
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {bookingSuccess && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-green-800 mb-2">Appointment Confirmed!</h3>
-          <p className="text-green-700">Appointment ID: {bookingSuccess.id}</p>
-          <p className="text-green-700">Queue Position: #{bookingSuccess.queuePosition}</p>
-          {bookingSuccess.queuePosition && (
-            <p className="text-green-700 mt-2">
-              Estimated wait: {bookingSuccess.queuePosition * 15} minutes
-            </p>
-          )}
-          <div className="flex gap-3 mt-4">
-            <button onClick={() => router.push('/patient/appointments')} className="btn-primary">
-              View My Appointments
-            </button>
-            <button onClick={() => setBookingSuccess(null)} className="btn-secondary">
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-col md:flex-row gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="flex flex-col md:flex-row gap-4"
+      >
         <input
           type="text"
           placeholder="Search doctors by name..."
@@ -214,20 +222,35 @@ export default function DoctorsPage() {
           <option value="experience">Sort by Experience</option>
           <option value="fee">Sort by Fee</option>
         </select>
-      </div>
+      </motion.div>
 
       {filteredDoctors.length === 0 ? (
-        <EmptyState 
-          title="No Doctors Found" 
-          message="Try adjusting your search or filters." 
-          icon="?????"
-        />
+        <EmptyState title="No Doctors Found" message="Try adjusting your search." />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <motion.div
+          initial="hidden"
+          animate="show"
+          variants={{
+            hidden: { opacity: 0 },
+            show: {
+              opacity: 1,
+              transition: { staggerChildren: 0.1 }
+            }
+          }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
           {filteredDoctors.map((doctor) => {
             const slotStatus = getSlotStatus(doctor);
             return (
-              <div key={doctor.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <motion.div
+                key={doctor.id}
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  show: { opacity: 1, y: 0 }
+                }}
+                whileHover={{ y: -5, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}
+                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+              >
                 <div className="flex items-start gap-4">
                   <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-2xl font-bold text-blue-600">
                     {doctor.name.charAt(0)}
@@ -246,88 +269,110 @@ export default function DoctorsPage() {
                 <div className="mt-3">
                   <StatusBadge status={slotStatus.status} />
                 </div>
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setSelectedDoctor(doctor)}
                   className="btn-primary w-full mt-4"
                 >
                   Book Appointment
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       )}
 
-      {selectedDoctor && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Book with {selectedDoctor.name}
-            </h3>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
-              <select value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="input-field">
-                <option value="">Select a date</option>
-                {dates.map((date) => (
-                  <option key={date} value={date}>{date}</option>
-                ))}
-              </select>
-            </div>
-            
-            {selectedDate && (
+      <AnimatePresence>
+        {selectedDoctor && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+          >
+            <motion.div
+              initial={{ scale: 0.8, y: 50 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.8, y: 50 }}
+              className="bg-white rounded-xl shadow-xl max-w-md w-full p-6"
+            >
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Book with {selectedDoctor.name}
+              </h3>
+              
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Select Time Slot</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {timeSlots.map((slot) => (
-                    <button
-                      key={slot}
-                      onClick={() => setSelectedSlot(slot)}
-                      className={`px-3 py-2 rounded-lg border text-sm ${
-                        selectedSlot === slot
-                          ? 'border-blue-600 bg-blue-50 text-blue-700'
-                          : 'border-gray-300 text-gray-700 hover:border-gray-400'
-                      }`}
-                    >
-                      {slot}
-                    </button>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
+                <select value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="input-field">
+                  <option value="">Select a date</option>
+                  {dates.map((date) => (
+                    <option key={date} value={date}>{date}</option>
                   ))}
-                </div>
+                </select>
               </div>
-            )}
+              
+              {selectedDate && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="mb-4"
+                >
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Select Time Slot</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {timeSlots.map((slot) => (
+                      <motion.button
+                        key={slot}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setSelectedSlot(slot)}
+                        className={`px-3 py-2 rounded-lg border text-sm ${
+                          selectedSlot === slot
+                            ? 'border-blue-600 bg-blue-50 text-blue-700'
+                            : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                        }`}
+                      >
+                        {slot}
+                      </motion.button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Symptoms (Optional)
-              </label>
-              <textarea
-                value={symptoms}
-                onChange={(e) => setSymptoms(e.target.value)}
-                placeholder="Describe your symptoms..."
-                className="input-field"
-                rows="3"
-                maxLength={200}
-              />
-              <p className="text-xs text-gray-500 mt-1">{symptoms.length}/200 characters</p>
-            </div>
-            
-            {bookingError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-                <p className="text-sm text-red-700">{bookingError}</p>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Symptoms (Optional)
+                </label>
+                <textarea
+                  value={symptoms}
+                  onChange={(e) => setSymptoms(e.target.value)}
+                  placeholder="Describe your symptoms..."
+                  className="input-field"
+                  rows="3"
+                  maxLength={200}
+                />
               </div>
-            )}
-            
-            <div className="flex gap-3">
-              <button onClick={() => setSelectedDoctor(null)} className="btn-secondary flex-1">
-                Cancel
-              </button>
-              <button onClick={handleBookAppointment} disabled={bookingLoading} className="btn-primary flex-1">
-                {bookingLoading ? 'Booking...' : 'Confirm Booking'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              
+              {bookingError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-red-700">{bookingError}</p>
+                </div>
+              )}
+              
+              <div className="flex gap-3">
+                <button onClick={() => setSelectedDoctor(null)} className="btn-secondary flex-1">
+                  Cancel
+                </button>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleBookAppointment}
+                  disabled={bookingLoading}
+                  className="btn-primary flex-1"
+                >
+                  {bookingLoading ? 'Booking...' : 'Confirm Booking'}
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
