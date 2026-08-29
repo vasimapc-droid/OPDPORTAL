@@ -2,7 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '../../../services/api';
+import { appointmentService } from '../../../services/appointmentService';
+import Loading from '../../../components/Loading';
+import EmptyState from '../../../components/EmptyState';
+import StatusBadge from '../../../components/StatusBadge';
+import StatsCard from '../../../components/StatsCard';
 
 export default function DoctorQueue() {
   const router = useRouter();
@@ -11,6 +15,8 @@ export default function DoctorQueue() {
   const [updateLoading, setUpdateLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [consultationNotes, setConsultationNotes] = useState('');
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('opd_user');
@@ -28,14 +34,12 @@ export default function DoctorQueue() {
 
   const fetchQueue = async (doctorId) => {
     try {
-      const response = await api.get('/appointments', {
-        params: { doctorId },
-      });
-      if (response.data.success) {
-        setAppointments(response.data.data);
+      const response = await appointmentService.getAppointments({ doctorId });
+      if (response.success) {
+        setAppointments(response.data);
       }
     } catch (err) {
-      setError('Unable to load queue.');
+      setError('Unable to load queue. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -47,22 +51,26 @@ export default function DoctorQueue() {
     setSuccessMessage('');
 
     try {
-      const response = await api.patch('/appointments/' + appointmentId, {
-        status: newStatus,
-      });
+      const response = await appointmentService.updateAppointmentStatus(
+        appointmentId,
+        newStatus,
+        consultationNotes
+      );
 
-      if (response.data.success) {
+      if (response.success) {
         setSuccessMessage(`Appointment ${newStatus.toLowerCase()} successfully!`);
         setAppointments((prev) =>
           prev.map((appt) =>
-            appt.id === appointmentId ? { ...appt, status: newStatus } : appt
+            appt.id === appointmentId ? { ...appt, status: newStatus, consultationNotes } : appt
           )
         );
+        setSelectedAppointment(null);
+        setConsultationNotes('');
       } else {
-        setError(response.data.message);
+        setError(response.message);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update.');
+      setError(err.response?.data?.message || 'Failed to update appointment.');
     } finally {
       setUpdateLoading(false);
     }
@@ -73,11 +81,7 @@ export default function DoctorQueue() {
   const cancelledPatients = appointments.filter((appt) => appt.status === 'Cancelled');
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <Loading message="Loading patient queue..." />;
   }
 
   return (
@@ -97,24 +101,17 @@ export default function DoctorQueue() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <p className="text-sm text-gray-600 mb-1">Waiting</p>
-          <p className="text-3xl font-bold text-yellow-600">{waitingPatients.length}</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <p className="text-sm text-gray-600 mb-1">Completed</p>
-          <p className="text-3xl font-bold text-green-600">{completedPatients.length}</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <p className="text-sm text-gray-600 mb-1">Cancelled</p>
-          <p className="text-3xl font-bold text-red-600">{cancelledPatients.length}</p>
-        </div>
+        <StatsCard title="Waiting" value={waitingPatients.length} icon="?" color="warning" />
+        <StatsCard title="Completed" value={completedPatients.length} icon="?" color="success" />
+        <StatsCard title="Cancelled" value={cancelledPatients.length} icon="?" color="danger" />
       </div>
 
       {appointments.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-          <p className="text-gray-600">No patients in queue.</p>
-        </div>
+        <EmptyState
+          title="No Patients in Queue"
+          message="There are no appointments at the moment."
+          icon="??"
+        />
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
@@ -138,25 +135,24 @@ export default function DoctorQueue() {
                       {appt.symptoms && (
                         <p className="text-xs text-gray-500 mt-1">{appt.symptoms}</p>
                       )}
+                      {appt.consultationNotes && (
+                        <p className="text-xs text-green-600 mt-1">Notes: {appt.consultationNotes}</p>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{appt.id}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{appt.time}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        appt.status === 'Upcoming' ? 'bg-blue-100 text-blue-800' :
-                        appt.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {appt.status}
-                      </span>
+                      <StatusBadge status={appt.status} />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {appt.status === 'Upcoming' && (
                         <div className="flex gap-2">
                           <button
-                            onClick={() => updateStatus(appt.id, 'Completed')}
-                            disabled={updateLoading}
-                            className="text-xs px-3 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+                            onClick={() => {
+                              setSelectedAppointment(appt);
+                              setConsultationNotes('');
+                            }}
+                            className="text-xs px-3 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700"
                           >
                             Complete
                           </button>
@@ -174,6 +170,44 @@ export default function DoctorQueue() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {selectedAppointment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Complete Consultation - {selectedAppointment.patientName}
+            </h3>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Consultation Notes
+              </label>
+              <textarea
+                value={consultationNotes}
+                onChange={(e) => setConsultationNotes(e.target.value)}
+                placeholder="Enter consultation notes..."
+                className="input-field"
+                rows="4"
+                maxLength={300}
+              />
+              <p className="text-xs text-gray-500 mt-1">{consultationNotes.length}/300 characters</p>
+            </div>
+            
+            <div className="flex gap-3">
+              <button onClick={() => setSelectedAppointment(null)} className="btn-secondary flex-1">
+                Cancel
+              </button>
+              <button 
+                onClick={() => updateStatus(selectedAppointment.id, 'Completed')} 
+                disabled={updateLoading} 
+                className="btn-primary flex-1"
+              >
+                {updateLoading ? 'Completing...' : 'Complete Consultation'}
+              </button>
+            </div>
           </div>
         </div>
       )}

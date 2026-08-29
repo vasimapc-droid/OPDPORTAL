@@ -2,19 +2,35 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '../../../services/api';
+import { availabilityService } from '../../../services/availabilityService';
+import Loading from '../../../components/Loading';
 
 export default function DoctorAvailability() {
   const router = useRouter();
   const [user, setUser] = useState(null);
-  const [selectedDate, setSelectedDate] = useState('2026-08-24');
+  const [selectedDate, setSelectedDate] = useState('');
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState('');
   const [error, setError] = useState('');
 
-  const dates = ['2026-08-24', '2026-08-25', '2026-08-26'];
-  const allTimeSlots = ['09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '12:00 PM'];
+  const allTimeSlots = ['09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '12:00 PM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM'];
+
+  const getNext14Days = () => {
+    const dates = [];
+    const today = new Date();
+    for (let i = 1; i <= 14; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      dates.push(`${year}-${month}-${day}`);
+    }
+    return dates;
+  };
+
+  const dates = getNext14Days();
 
   useEffect(() => {
     const storedUser = localStorage.getItem('opd_user');
@@ -28,17 +44,16 @@ export default function DoctorAvailability() {
       return;
     }
     setUser(parsedUser);
-    fetchAvailability(parsedUser.id, '2026-08-24');
+    setSelectedDate(dates[0]);
+    fetchAvailability(parsedUser.id, dates[0]);
   }, []);
 
   const fetchAvailability = async (doctorId, date) => {
     setLoading(true);
     try {
-      const response = await api.get('/availability', {
-        params: { doctorId, date },
-      });
-      if (response.data.success && response.data.data.length > 0) {
-        setSlots(response.data.data[0].slots);
+      const response = await availabilityService.getAvailability(doctorId, date);
+      if (response.success && response.data.length > 0) {
+        setSlots(response.data[0].slots);
       } else {
         setSlots([]);
       }
@@ -66,21 +81,21 @@ export default function DoctorAvailability() {
     setError('');
 
     try {
-      const response = await api.post('/availability', {
+      const response = await availabilityService.addAvailability({
         doctorId: user.id,
         doctorName: user.name,
         date: selectedDate,
         slots: [slot],
       });
 
-      if (response.data.success) {
+      if (response.success) {
         setSlots([...slots, slot].sort());
         setSuccessMessage(`Slot ${slot} added successfully!`);
       } else {
-        setError(response.data.message);
+        setError(response.message);
       }
     } catch (err) {
-      setError('Failed to add slot.');
+      setError('Failed to add slot. Please try again.');
     }
   };
 
@@ -90,11 +105,7 @@ export default function DoctorAvailability() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-gray-600">Loading availability...</p>
-      </div>
-    );
+    return <Loading message="Loading availability..." />;
   }
 
   return (
@@ -140,7 +151,7 @@ export default function DoctorAvailability() {
         </h2>
 
         {slots.length === 0 ? (
-          <p className="text-gray-600 mb-4">No slots added yet.</p>
+          <p className="text-gray-600 mb-4">No slots added yet. Add slots below.</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-6">
             {slots.map((slot) => (

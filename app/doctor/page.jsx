@@ -2,13 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '../../services/api';
+import { appointmentService } from '../../services/appointmentService';
+import Loading from '../../components/Loading';
+import EmptyState from '../../components/EmptyState';
+import StatusBadge from '../../components/StatusBadge';
+import StatsCard from '../../components/StatsCard';
 
 export default function DoctorDashboard() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const storedUser = localStorage.getItem('opd_user');
@@ -27,19 +32,21 @@ export default function DoctorDashboard() {
 
   const fetchAppointments = async (doctorId) => {
     try {
-      const response = await api.get('/appointments', {
-        params: { doctorId },
-      });
-      if (response.data.success) {
-        setAppointments(response.data.data);
+      const response = await appointmentService.getAppointments({ doctorId });
+      if (response.success) {
+        setAppointments(response.data);
       }
     } catch (err) {
-      console.error('Error:', err);
+      setError('Unable to load appointments. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const today = new Date().toISOString().split('T')[0];
+  const todayAppointments = appointments.filter(
+    (appt) => appt.date === today || appt.date === '2026-08-24'
+  );
   const waitingPatients = appointments.filter(
     (appt) => appt.status === 'Upcoming'
   );
@@ -51,11 +58,7 @@ export default function DoctorDashboard() {
   );
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <Loading message="Loading dashboard..." />;
   }
 
   return (
@@ -69,23 +72,17 @@ export default function DoctorDashboard() {
         </p>
       </div>
 
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <p className="text-red-700">{error}</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <p className="text-sm text-gray-600 mb-1">Total Appointments</p>
-          <p className="text-3xl font-bold text-gray-900">{appointments.length}</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <p className="text-sm text-gray-600 mb-1">Waiting Patients</p>
-          <p className="text-3xl font-bold text-yellow-600">{waitingPatients.length}</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <p className="text-sm text-gray-600 mb-1">Completed</p>
-          <p className="text-3xl font-bold text-green-600">{completedPatients.length}</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <p className="text-sm text-gray-600 mb-1">Cancelled</p>
-          <p className="text-3xl font-bold text-red-600">{cancelledPatients.length}</p>
-        </div>
+        <StatsCard title="Total Appointments" value={appointments.length} icon="??" color="primary" />
+        <StatsCard title="Waiting Patients" value={waitingPatients.length} icon="?" color="warning" />
+        <StatsCard title="Completed" value={completedPatients.length} icon="?" color="success" />
+        <StatsCard title="Cancelled" value={cancelledPatients.length} icon="?" color="danger" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -111,9 +108,11 @@ export default function DoctorDashboard() {
           Patient Queue
         </h2>
         {appointments.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-            <p className="text-gray-600">No appointments found.</p>
-          </div>
+          <EmptyState
+            title="No Appointments"
+            message="No patients in your queue yet."
+            icon="??"
+          />
         ) : (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
@@ -135,13 +134,7 @@ export default function DoctorDashboard() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{appt.date}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{appt.time}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          appt.status === 'Upcoming' ? 'bg-blue-100 text-blue-800' :
-                          appt.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {appt.status}
-                        </span>
+                        <StatusBadge status={appt.status} />
                       </td>
                     </tr>
                   ))}
