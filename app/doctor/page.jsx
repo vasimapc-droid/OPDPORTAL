@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { appointmentService } from '../../services/appointmentService';
 import Loading from '../../components/Loading';
 import EmptyState from '../../components/EmptyState';
 import StatusBadge from '../../components/StatusBadge';
-import StatsCard from '../../components/StatsCard';
 
 export default function DoctorDashboard() {
   const router = useRouter();
@@ -37,25 +37,15 @@ export default function DoctorDashboard() {
         setAppointments(response.data);
       }
     } catch (err) {
-      setError('Unable to load appointments. Please try again.');
+      setError('Unable to load appointments.');
     } finally {
       setLoading(false);
     }
   };
 
-  const today = new Date().toISOString().split('T')[0];
-  const todayAppointments = appointments.filter(
-    (appt) => appt.date === today || appt.date === '2026-08-24'
-  );
-  const waitingPatients = appointments.filter(
-    (appt) => appt.status === 'Upcoming'
-  );
-  const completedPatients = appointments.filter(
-    (appt) => appt.status === 'Completed'
-  );
-  const cancelledPatients = appointments.filter(
-    (appt) => appt.status === 'Cancelled'
-  );
+  const waitingPatients = appointments.filter((appt) => appt.status === 'Upcoming');
+  const completedPatients = appointments.filter((appt) => appt.status === 'Completed');
+  const cancelledPatients = appointments.filter((appt) => appt.status === 'Cancelled');
 
   if (loading) {
     return <Loading message="Loading dashboard..." />;
@@ -63,14 +53,19 @@ export default function DoctorDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 md:p-8 text-white">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 md:p-8 text-white"
+      >
         <h1 className="text-2xl md:text-3xl font-bold mb-2">
           Welcome, {user?.name}!
         </h1>
         <p className="text-blue-100">
           Manage your patients and appointments efficiently.
         </p>
-      </div>
+      </motion.div>
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
@@ -78,14 +73,36 @@ export default function DoctorDashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard title="Total Appointments" value={appointments.length} icon="??" color="primary" />
-        <StatsCard title="Waiting Patients" value={waitingPatients.length} icon="?" color="warning" />
-        <StatsCard title="Completed" value={completedPatients.length} icon="?" color="success" />
-        <StatsCard title="Cancelled" value={cancelledPatients.length} icon="?" color="danger" />
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+      >
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <p className="text-sm text-gray-600 mb-1">Total Appointments</p>
+          <p className="text-3xl font-bold text-gray-900">{appointments.length}</p>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <p className="text-sm text-gray-600 mb-1">Waiting Patients</p>
+          <p className="text-3xl font-bold text-yellow-600">{waitingPatients.length}</p>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <p className="text-sm text-gray-600 mb-1">Completed</p>
+          <p className="text-3xl font-bold text-green-600">{completedPatients.length}</p>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <p className="text-sm text-gray-600 mb-1">Cancelled</p>
+          <p className="text-3xl font-bold text-red-600">{cancelledPatients.length}</p>
+        </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+        className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+      >
         <button
           onClick={() => router.push('/doctor/queue')}
           className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow text-left"
@@ -101,18 +118,18 @@ export default function DoctorDashboard() {
           <h3 className="font-semibold text-gray-900">Availability</h3>
           <p className="text-sm text-gray-600">Manage your schedule</p>
         </button>
-      </div>
+      </motion.div>
 
-      <div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.3 }}
+      >
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
           Patient Queue
         </h2>
         {appointments.length === 0 ? (
-          <EmptyState
-            title="No Appointments"
-            message="No patients in your queue yet."
-            icon="??"
-          />
+          <EmptyState title="No Appointments" message="No patients in your queue yet." />
         ) : (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
@@ -143,7 +160,7 @@ export default function DoctorDashboard() {
             </div>
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }
