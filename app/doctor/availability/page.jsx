@@ -1,7 +1,8 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { availabilityService } from '../../../services/availabilityService';
 import Loading from '../../../components/Loading';
 
@@ -91,17 +92,19 @@ export default function DoctorAvailability() {
       if (response.success) {
         setSlots([...slots, slot].sort());
         setSuccessMessage(`Slot ${slot} added successfully!`);
+        setTimeout(() => setSuccessMessage(''), 3000);
       } else {
         setError(response.message);
       }
     } catch (err) {
-      setError('Failed to add slot. Please try again.');
+      setError('Failed to add slot.');
     }
   };
 
   const removeSlot = (slot) => {
     setSlots(slots.filter((s) => s !== slot));
     setSuccessMessage(`Slot ${slot} removed successfully!`);
+    setTimeout(() => setSuccessMessage(''), 3000);
   };
 
   if (loading) {
@@ -110,12 +113,23 @@ export default function DoctorAvailability() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Manage Availability</h1>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Manage Availability</h1>
+        <p className="text-gray-600 mt-1">Set your daily appointment slots</p>
+      </motion.div>
 
       {successMessage && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-green-50 border border-green-200 rounded-xl p-4"
+        >
           <p className="text-green-700">{successMessage}</p>
-        </div>
+        </motion.div>
       )}
 
       {error && (
@@ -124,7 +138,12 @@ export default function DoctorAvailability() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        className="bg-white rounded-2xl border border-teal-100 shadow-sm p-6"
+      >
         <label className="block text-sm font-medium text-gray-700 mb-3">
           Select Date
         </label>
@@ -133,19 +152,24 @@ export default function DoctorAvailability() {
             <button
               key={date}
               onClick={() => handleDateChange(date)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                 selectedDate === date
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-lg shadow-teal-500/30'
+                  : 'bg-white text-gray-700 border border-teal-200 hover:border-teal-400 hover:text-teal-600'
               }`}
             >
               {date}
             </button>
           ))}
         </div>
-      </div>
+      </motion.div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="bg-white rounded-2xl border border-teal-100 shadow-sm p-6"
+      >
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
           Available Slots for {selectedDate}
         </h2>
@@ -157,14 +181,16 @@ export default function DoctorAvailability() {
             {slots.map((slot) => (
               <div
                 key={slot}
-                className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2"
+                className="flex items-center justify-between bg-teal-50 border border-teal-200 rounded-lg px-3 py-2"
               >
-                <span className="text-sm font-medium text-green-800">{slot}</span>
+                <span className="text-sm font-medium text-teal-700">{slot}</span>
                 <button
                   onClick={() => removeSlot(slot)}
-                  className="text-red-600 hover:text-red-800"
+                  className="text-red-500 hover:text-red-700 transition-colors"
                 >
-                  X
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
               </div>
             ))}
@@ -180,17 +206,17 @@ export default function DoctorAvailability() {
               key={slot}
               onClick={() => addSlot(slot)}
               disabled={slots.includes(slot)}
-              className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
+              className={`px-3 py-2 rounded-lg border text-sm transition-all duration-300 ${
                 slots.includes(slot)
                   ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
-                  : 'border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100'
+                  : 'border-teal-300 bg-teal-50 text-teal-700 hover:bg-teal-100 hover:border-teal-400'
               }`}
             >
               {slot}
             </button>
           ))}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

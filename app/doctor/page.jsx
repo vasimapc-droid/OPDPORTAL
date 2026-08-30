@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -56,15 +56,11 @@ export default function DoctorDashboard() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 md:p-8 text-white"
+        transition={{ duration: 0.8 }}
+        className="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-xl p-6 md:p-8 text-white shadow-lg shadow-teal-500/20"
       >
-        <h1 className="text-2xl md:text-3xl font-bold mb-2">
-          Welcome, {user?.name}!
-        </h1>
-        <p className="text-blue-100">
-          Manage your patients and appointments efficiently.
-        </p>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2">Welcome, {user?.name}!</h1>
+        <p className="text-teal-100">Manage your patients and appointments efficiently.</p>
       </motion.div>
 
       {error && (
@@ -76,22 +72,22 @@ export default function DoctorDashboard() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
       >
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-teal-100 p-6">
           <p className="text-sm text-gray-600 mb-1">Total Appointments</p>
-          <p className="text-3xl font-bold text-gray-900">{appointments.length}</p>
+          <p className="text-3xl font-bold text-teal-600">{appointments.length}</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-teal-100 p-6">
           <p className="text-sm text-gray-600 mb-1">Waiting Patients</p>
           <p className="text-3xl font-bold text-yellow-600">{waitingPatients.length}</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-teal-100 p-6">
           <p className="text-sm text-gray-600 mb-1">Completed</p>
-          <p className="text-3xl font-bold text-green-600">{completedPatients.length}</p>
+          <p className="text-3xl font-bold text-emerald-600">{completedPatients.length}</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-teal-100 p-6">
           <p className="text-sm text-gray-600 mb-1">Cancelled</p>
           <p className="text-3xl font-bold text-red-600">{cancelledPatients.length}</p>
         </div>
@@ -100,20 +96,19 @@ export default function DoctorDashboard() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
         className="grid grid-cols-1 sm:grid-cols-2 gap-4"
       >
         <button
           onClick={() => router.push('/doctor/queue')}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow text-left"
+          className="bg-white rounded-xl shadow-sm border border-teal-100 p-6 hover:shadow-lg hover:border-teal-300 transition-all duration-300 text-left"
         >
           <h3 className="font-semibold text-gray-900">Patient Queue</h3>
           <p className="text-sm text-gray-600">View and manage patient queue</p>
         </button>
-
         <button
           onClick={() => router.push('/doctor/availability')}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow text-left"
+          className="bg-white rounded-xl shadow-sm border border-teal-100 p-6 hover:shadow-lg hover:border-teal-300 transition-all duration-300 text-left"
         >
           <h3 className="font-semibold text-gray-900">Availability</h3>
           <p className="text-sm text-gray-600">Manage your schedule</p>
@@ -123,29 +118,27 @@ export default function DoctorDashboard() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.3 }}
+        transition={{ duration: 0.6, delay: 0.6 }}
       >
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
-          Patient Queue
-        </h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Patient Queue</h2>
         {appointments.length === 0 ? (
           <EmptyState title="No Appointments" message="No patients in your queue yet." />
         ) : (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-sm border border-teal-100 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-teal-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Patient</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase">#</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase">Patient</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase">Time</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase">Status</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {appointments.map((appt, index) => (
-                    <tr key={appt.id}>
+                    <tr key={appt.id} className="hover:bg-teal-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{index + 1}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{appt.patientName}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{appt.date}</td>
