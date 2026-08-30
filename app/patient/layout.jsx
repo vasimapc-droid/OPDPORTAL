@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -33,7 +33,7 @@ export default function PatientLayout({ children }) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
       </div>
     );
   }
@@ -43,43 +43,46 @@ export default function PatientLayout({ children }) {
     { name: 'Find Doctors', href: '/patient/doctors' },
     { name: 'Appointments', href: '/patient/appointments' },
     { name: 'History', href: '/patient/history' },
+    { name: 'Profile', href: '/patient/profile' },
   ];
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+      <nav className="bg-white shadow-sm border-b border-teal-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold">O</span>
+              <div className="w-10 h-10 bg-gradient-to-r from-teal-600 to-emerald-600 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
               </div>
-              <span className="ml-2 text-xl font-bold text-gray-900">OPD Portal</span>
+              <span className="ml-2 text-xl font-bold bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent">
+                OPD Portal
+              </span>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">Welcome, {user?.name}</span>
-              <button
-                onClick={handleLogout}
-                className="btn-secondary text-sm"
-              >
-                Sign out
-              </button>
+              <span className="text-sm text-gray-600 hidden md:block">Welcome, {user?.name}</span>
+              <button onClick={handleLogout} className="btn-secondary text-sm">Sign out</button>
             </div>
           </div>
         </div>
       </nav>
 
       <div className="flex">
-        <aside className="hidden lg:flex lg:flex-col w-64 bg-white border-r border-gray-200 min-h-screen">
-          <nav className="flex-1 px-4 py-6 space-y-1">
+        <aside className="hidden lg:flex lg:flex-col w-64 bg-gradient-to-b from-teal-600 to-emerald-700 min-h-screen">
+          <div className="p-6">
+            <h2 className="text-lg font-semibold text-white">Navigation</h2>
+          </div>
+          <nav className="flex-1 px-4 pb-4 space-y-1">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
                   pathname === item.href
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-gray-600 hover:bg-gray-50'
+                    ? 'bg-white text-teal-700 shadow-lg'
+                    : 'text-teal-100 hover:bg-teal-700 hover:text-white'
                 }`}
               >
                 <span className="text-sm font-medium">{item.name}</span>
@@ -93,17 +96,17 @@ export default function PatientLayout({ children }) {
         </main>
       </div>
 
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-teal-600 border-t border-teal-500 z-50">
         <div className="flex justify-around items-center h-16">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center flex-1 py-2 ${
-                pathname === item.href ? 'text-blue-600' : 'text-gray-600'
+              className={`flex flex-col items-center justify-center flex-1 py-2 transition-colors ${
+                pathname === item.href ? 'text-white font-semibold' : 'text-teal-200'
               }`}
             >
-              <span className="text-xs mt-1 font-medium">{item.name}</span>
+              <span className="text-xs">{item.name}</span>
             </Link>
           ))}
         </div>
