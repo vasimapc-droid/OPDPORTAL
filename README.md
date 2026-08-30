@@ -101,21 +101,21 @@ doctor-opd-portal/
 
 npm install
 
-Run Development Server:
+## Run Development Server:
 
 npm run dev
 
 Open http://localhost:3000 in your browser.
 
-Build for Production:
+## Build for Production:
 
 npm run build
 
-Start Production Server:
+## Start Production Server:
 
 npm start
 
-Test Instructions
+## Test Instructions
 Automated Testing (Playwright):
 
 npx playwright test
@@ -133,64 +133,64 @@ Running 8 tests using 1 worker
   ✓  doctor cannot access patient pages
 
   8 passed
-Manual Testing:
--Login as Patient
+## Manual Testing:
+- Login as Patient
 
--Search and filter doctors
+- Search and filter doctors
 
--Book an appointment
+- Book an appointment
 
--View appointments and history
+- View appointments and history
 
--Edit profile
+- Edit profile
 
--Login as Doctor
+- Login as Doctor
 
--View patient queue
+- View patient queue
 
--Complete/Cancel appointments
+- Complete/Cancel appointments
 
--Manage availability
+- Manage availability
 
--Edit profile
+- Edit profile
 
-Mock Credentials / Role Switcher Instructions
+## Mock Credentials / Role Switcher Instructions:
 Patient Login:
--Email: patient@example.com
--Password: patient123
+- Email: patient@example.com
+- Password: patient123
 
 Doctor Login:
--Email: doctor@example.com
--Password: doctor123
+- Email: doctor@example.com
+- Password: doctor123
 
 How to Switch Roles:
--Go to the login page
+- Go to the login page
 
--Click on "Patient" or "Doctor" tab
+- Click on "Patient" or "Doctor" tab
 
--Credentials auto-fill based on selected role
+- Credentials auto-fill based on selected role
 
--Click "Sign in"
+- Click "Sign in"
 
--Live Demo Link
+- Live Demo Link
 https://opd-portal.vercel.app
 
--GitHub Repository
+- GitHub Repository
 https://github.com/vasimapc-droid/OPDPORTAL
 
-Future Improvements:
--Real authentication with JWT
+## Future Improvements:
+- Real authentication with JWT
 
--PostgreSQL/Database integration
+- PostgreSQL/Database integration
 
--Email/SMS notifications
+- Email/SMS notifications
 
--Payment integration
+- Payment integration
 
--Hospital administration panel
+- Hospital administration panel
 
--Real-time queue updates with WebSockets
+- Real-time queue updates with WebSockets
 
--Video consultation
+- Video consultation
 
--Prescription generation
+- Prescription generation
